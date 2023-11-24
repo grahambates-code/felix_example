@@ -30,6 +30,8 @@ export default () => {
         }
     };
 
+    const [, setSizeScale] = useState(1.5);
+
     const [viewState, setViewState] = useState(INITIAL_VIEW_STATE);
 
     const [currentSegment, setCurrentSegment] = useState('');
@@ -115,6 +117,7 @@ export default () => {
         x: 20,
 
         controller : currentSegment === 'Altitude'? false : { type: FirstPersonController,
+            setSizeScale: setSizeScale,
             keyboard: {
                 moveSpeed: 0.5,
                 zoomSpeed: 0.005,
