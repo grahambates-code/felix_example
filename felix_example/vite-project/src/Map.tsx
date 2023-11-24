@@ -4,6 +4,7 @@ import {useCallback, useEffect, useState} from "react";
 import MapLayer from "./MapLayer";
 import PitchViewer from "./PitchViewer";
 import {ScenegraphLayer} from '@deck.gl/mesh-layers';
+import ModelarController from './ModelarController'
 export default () => {
 
     const INITIAL_VIEW_STATE = {
@@ -38,17 +39,27 @@ export default () => {
             // Adjust the scale factor as per your need
 
             const scaleFactor = -0.1;
-            const delta = e.deltaY * scaleFactor;
+            const deltaY = -e.deltaY * scaleFactor;
+            const deltaX = e.deltaX * scaleFactor;
 
             setViewState(prevState => {
-                let newAltitude = prevState.main.position[2] - delta;
+
+                // Convert bearing to radians
+                const bearingInRadians = prevState.main.bearing * Math.PI / 180;
+
+                // Calculate adjustment factor for the x-coordinate (position[0])
+                const adjustmentFactor = Math.cos(bearingInRadians);
+
+                let newAltitude = prevState.main.position[2] - deltaY;
+                let newPosition0 = prevState.main.position[0] - deltaX * adjustmentFactor;
+
                 newAltitude = Math.max(newAltitude, 1); // Ensure altitude doesn't go below 1
 
                 return {
                     ...prevState,
                     main: {
                         ...prevState.main,
-                        position: [prevState.main.position[0], prevState.main.position[1], newAltitude],
+                        position: [newPosition0, prevState.main.position[1], newAltitude],
                     }
                 };
             });
@@ -92,16 +103,6 @@ export default () => {
         };
     }, [handleWheel]);
 
-    //
-    // let controller =  { type: FirstPersonController };
-    //
-    // if (currentSegment === 'Altitude') {
-    //     controller = false;
-    // }
-    //
-    // if (currentSegment === 'topDown') {
-    //     controller =  { type: MapController };
-    // }
     function layerFilter({layer, viewport}) {
         const shouldDrawInMinimap = layer.id.startsWith('bnw') || layer.id.startsWith('church');
         if (viewport.id === 'minimap') return shouldDrawInMinimap;
@@ -109,8 +110,6 @@ export default () => {
        // return !shouldDrawInMinimap;
     }
 
-
-    //{ type: FirstPersonController }
     const mainView = new FirstPersonView({id: 'main',
 
         x: 20,
